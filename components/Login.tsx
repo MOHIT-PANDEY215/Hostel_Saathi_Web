@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Tabs, Tab, Input, Link, Button, Card, CardBody } from "@heroui/react";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -26,6 +26,10 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [status, setStatus] = useState<"login" | "signup">("login");
   const [error, setError] = useState<string>("");
+
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  
 
   const [formData, setFormData] = useState<FormData>({
     student: {
@@ -109,6 +113,12 @@ export default function Login() {
     }));
     setError("");
   };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <div className="flex flex-col items-center w-full mt-10">
