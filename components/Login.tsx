@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { Tabs, Tab, Input, Link, Button, Card, CardBody } from "@heroui/react";
 import { Eye, EyeOff } from "lucide-react";
+import {loginStudent} from '@/app/api/utils/student'
+import Cookies from 'js-cookie'
+import { useRouter } from 'next/navigation';
 
 interface StudentFormData {
   regNo: string;
@@ -22,6 +25,7 @@ interface FormData {
 }
 
 export default function Login() {
+  const router = useRouter()
   const [selected, setSelected] = useState<"student" | "admin">("student");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [status, setStatus] = useState<"login" | "signup">("login");
@@ -57,7 +61,7 @@ export default function Login() {
     setError("");
   };
 
-  const handleLogin = (
+  const handleLogin = async (
     e: React.FormEvent<HTMLFormElement>,
     role: "student" | "admin"
   ) => {
@@ -68,6 +72,15 @@ export default function Login() {
       if (!regNo || !password) {
         setError("All fields are required.");
         return;
+      }
+      const loginData={
+        registrationNumber:regNo,
+        password:password
+      }
+      const res = await loginStudent(loginData)
+      if(res){
+        Cookies.set('accessToken',res?.data?.accessToken)
+        router.push('/dashboard')
       }
       console.log("Student Login:", formData.student);
     } else {
