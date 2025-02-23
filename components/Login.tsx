@@ -2,12 +2,12 @@
 import React, { useEffect, useState } from "react";
 import { Tabs, Tab, Input, Link, Button, Card, CardBody } from "@heroui/react";
 import { Eye, EyeOff } from "lucide-react";
-import {loginStudent} from '@/app/api/utils/student'
+import { loginStudent, SignUpStudent } from '@/app/api/utils/student'
 import Cookies from 'js-cookie'
 import { useRouter } from 'next/navigation';
 
 interface StudentFormData {
-  regNo: string;
+  registrationNumber: string;
   password: string;
   fullName: string;
   hostelNumber: string;
@@ -33,11 +33,9 @@ export default function Login() {
 
   const [mounted, setMounted] = useState<boolean>(false);
 
-  
-
   const [formData, setFormData] = useState<FormData>({
     student: {
-      regNo: "",
+      registrationNumber: "",
       password: "",
       fullName: "",
       hostelNumber: "",
@@ -68,19 +66,20 @@ export default function Login() {
     e.preventDefault();
 
     if (role === "student") {
-      const { regNo, password } = formData.student;
-      if (!regNo || !password) {
+      const { registrationNumber, password } = formData.student;
+      if (!registrationNumber || !password) {
         setError("All fields are required.");
         return;
       }
-      const loginData={
-        registrationNumber:regNo,
-        password:password
+      const loginData = {
+        registrationNumber: registrationNumber,
+        password: password
       }
       const res = await loginStudent(loginData)
-      if(res){
-        Cookies.set('accessToken',res?.data?.accessToken)
-        router.push('/dashboard')
+      if (res) {
+        Cookies.set('accessToken', res?.data?.accessToken);
+        Cookies.set('role', role);
+        router.push('/dashboard');
       }
       console.log("Student Login:", formData.student);
     } else {
@@ -95,17 +94,19 @@ export default function Login() {
     resetForm(role);
   };
 
-  const handleSignup = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const { fullName, regNo, password, hostelNumber, mobileNumber } =
+    const { fullName, registrationNumber, password, hostelNumber, mobileNumber } =
       formData.student;
 
-    if (!fullName || !regNo || !password || !hostelNumber || !mobileNumber) {
+    if (!fullName || !registrationNumber || !password || !hostelNumber || !mobileNumber) {
       setError("All fields are required.");
       return;
     }
 
-    console.log("Student Signup:", formData.student);
+    const response = await SignUpStudent(formData.student);
+
+    console.log("Student Signup:", response);
     resetForm("student");
     setStatus("login");
   };
@@ -116,12 +117,12 @@ export default function Login() {
       [role]:
         role === "student"
           ? {
-              regNo: "",
-              password: "",
-              fullName: "",
-              hostelNumber: "",
-              mobileNumber: "",
-            }
+            registrationNumber: "",
+            password: "",
+            fullName: "",
+            hostelNumber: "",
+            mobileNumber: "",
+          }
           : { username: "", password: "" },
     }));
     setError("");
@@ -153,10 +154,10 @@ export default function Login() {
                   <Input
                     isRequired
                     label="Reg. No"
-                    name="regNo"
+                    name="registrationNumber"
                     placeholder="Enter your Registration No."
                     type="text"
-                    value={formData.student.regNo}
+                    value={formData.student.registrationNumber}
                     onChange={(e) => handleChange(e, "student")}
                   />
                   <Input
@@ -205,10 +206,10 @@ export default function Login() {
                   <Input
                     isRequired
                     label="Reg. No"
-                    name="regNo"
+                    name="registrationNumber"
                     placeholder="Enter your Registration No."
                     type="text"
-                    value={formData.student.regNo}
+                    value={formData.student.registrationNumber}
                     onChange={(e) => handleChange(e, "student")}
                   />
                   <Input
