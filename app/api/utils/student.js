@@ -1,11 +1,11 @@
 import axios from 'axios';
-import {apiUrlForRequest} from '@/lib/apiHelper'
-const PROD_ENDPOINT='https://hostel-saathi-backend.onrender.com'
-const LOCAL_ENDPOINT='http://localhost:4000'
-const apiURL = `${apiUrlForRequest(false,LOCAL_ENDPOINT,PROD_ENDPOINT)}/`;
+import { apiUrlForRequest } from '@/lib/apiHelper'
+const PROD_ENDPOINT = 'https://hostel-saathi-backend.onrender.com'
+const LOCAL_ENDPOINT = 'http://localhost:4000'
+const apiURL = `${apiUrlForRequest(false, LOCAL_ENDPOINT, PROD_ENDPOINT)}/`;
 const axiosInstance = axios.create({
-    baseURL: apiURL,
-  });
+  baseURL: apiURL,
+});
 
 export const loginStudent = async (body) => {
   try {
@@ -18,6 +18,21 @@ export const loginStudent = async (body) => {
     return response.data;
   } catch (error) {
     console.error('Error during login:', error);
-    throw error; 
+    throw error;
   }
 };
+
+export const SignUpStudent = async (body) => {
+  try {
+    const response = await axiosInstance.post(`api/v1/student/register`, body, {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.NEXT_PUBLIC_xApiKey,
+      }
+    });
+    return response;
+  } catch (error) {
+    console.error('Error during login:', error);
+    throw error;
+  }
+}

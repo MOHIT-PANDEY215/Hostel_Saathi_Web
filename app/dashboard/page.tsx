@@ -1,20 +1,21 @@
 "use client";
-import React, { useEffect, useState } from "react";
+
+import React from "react";
+import IssueForm from "@/components/Dashboard/IssueForm";
+import IssuesCard from "@/components/Dashboard/IssuesCard";
+
 
 const page = () => {
-  const [mounted, setMounted] = useState<boolean>(false);
-  useEffect(() => {
-      setMounted(true);
-    }, []);
-  
-    if (!mounted) return null;
+
   return (
-    <>
-      <div className="flex items-center justify-center min-h-screen">
-        
-        Dashboafrd
+    <div className="p-6">
+      <p className='text-3xl text-white text-center'>Issue Dashboard</p>
+      <div className="flex flex-col-reverse md:grid md:grid-cols-[2fr_1fr] pt-6 gap-10">
+        <IssuesCard />
+        <IssueForm />
       </div>
-    </>
+    </div>
+
   );
 };
 
