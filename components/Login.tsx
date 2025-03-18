@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Tabs, Tab, Input, Link, Button, Card, CardBody } from "@heroui/react";
 import { Eye, EyeOff } from "lucide-react";
 import { loginStudent, SignUpStudent } from '@/app/api/utils/student'
+import { loginAdmin } from '@/app/api/utils/admin'
 import Cookies from 'js-cookie'
 import { useRouter } from 'next/navigation';
 
@@ -82,13 +83,27 @@ export default function Login() {
         router.push('/dashboard');
       }
       console.log("Student Login:", formData.student);
-    } else {
+    }
+    else {
       const { username, password } = formData.admin;
       if (!username || !password) {
         setError("All fields are required.");
         return;
       }
-      console.log("Admin Login:", formData.admin);
+
+      const loginData = {
+        username: username,
+        password: password
+      }
+
+      const res = await loginAdmin(loginData)
+
+      if (res) {
+        Cookies.set('accessToken', res?.data?.accessToken);
+        Cookies.set('role', role);
+        router.push('/adminDashboard');
+      }
+      console.log("Admin Login:", res);
     }
 
     resetForm(role);
