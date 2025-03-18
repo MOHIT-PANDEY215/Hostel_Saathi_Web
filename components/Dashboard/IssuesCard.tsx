@@ -13,12 +13,20 @@ import {
   ModalContent,
 } from "@heroui/react";
 import Cookies from "js-cookie";
-import axios from "axios";
 import { useRouter } from "next/navigation";
+import { getAllIssues } from '@/app/api/utils/issue';
+
+interface issueData {
+  _id: string;
+  title: string;
+  hostelNumber: string;
+  description: string;
+  status: string;
+}
 
 const IssuesCard = () => {
   const router = useRouter();
-  const [issues, setIssues] = useState([]);
+  const [issues, setIssues] = useState<issueData[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedIssue, setSelectedIssue] = useState(null);
@@ -32,12 +40,13 @@ const IssuesCard = () => {
     }
 
     try {
-      const response = await axios.get(
-        `https://hostel-saathi-backend.onrender.com/api/v1/issue/all?page=${page}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setIssues(response.data.data.ref);
-      setTotalPages(response.data.data.totalPages);
+      // const response = await axios.get(
+      //   `https://hostel-saathi-backend.onrender.com/api/v1/issue/all?page=${page}`,
+      //   { headers: { Authorization: `Bearer ${token}` } }
+      // );
+      const response = await getAllIssues(page);
+      setIssues(response.ref);
+      setTotalPages(response.totalPages);
     } catch (error) {
       console.error("Error fetching issues:", error);
     }
