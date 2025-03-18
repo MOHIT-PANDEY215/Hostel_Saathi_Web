@@ -10,6 +10,7 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  ModalContent,
 } from "@heroui/react";
 import Cookies from "js-cookie";
 import axios from "axios";
@@ -23,7 +24,7 @@ const IssuesCard = () => {
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const getIssues = async (pageNum = 1) => {
+  const getIssues = async () => {
     const token = Cookies.get("accessToken");
     if (!token) {
       router.push("/login");
@@ -32,12 +33,11 @@ const IssuesCard = () => {
 
     try {
       const response = await axios.get(
-        `https://hostel-saathi-backend.onrender.com/api/v1/issue/all?page=${pageNum}`,
+        `https://hostel-saathi-backend.onrender.com/api/v1/issue/all?page=${page}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setIssues(response.data.data.ref);
       setTotalPages(response.data.data.totalPages);
-      setPage(response.data.data.currentPage);
     } catch (error) {
       console.error("Error fetching issues:", error);
     }
@@ -45,7 +45,7 @@ const IssuesCard = () => {
 
   useEffect(() => {
     getIssues();
-  }, []);
+  }, [page]);
 
   const openModal = (issue) => {
     setSelectedIssue(issue);
@@ -60,59 +60,61 @@ const IssuesCard = () => {
   return (
     <>
       <div className="p-6 backdrop-brightness-50 rounded-2xl">
-        {/* {isModalOpen && selectedIssue && ( */}
-        <Modal
-          isOpen={true}
-          onClose={closeModal}
-          placement="center"
-          backdrop="blur"
-          className="z-50 h-full w-full"
-        >
-          <ModalHeader>{selectedIssue?.title}</ModalHeader>
-          <ModalBody>
-            <p>
-              <strong>Hostel:</strong> {selectedIssue?.hostelNumber}
-            </p>
-            <p>
-              <strong>Description:</strong> {selectedIssue?.description}
-            </p>
-            <p>
-              <strong>Status:</strong> {selectedIssue?.status}
-            </p>
-            <p>
-              <strong>Priority:</strong> {selectedIssue?.priority}
-            </p>
-            <p>
-              <strong>Raised By:</strong> {selectedIssue?.raisedBy.fullName} (
-              {selectedIssue?.raisedBy.userRole})
-            </p>
-            {selectedIssue?.assignedTo && (
-              <>
+        {isModalOpen && selectedIssue && (
+          <Modal
+            isOpen={isModalOpen}
+            onClose={closeModal}
+            placement="center"
+            backdrop="blur"
+            className="z-50"
+          >
+            <ModalContent>
+              <ModalHeader>{selectedIssue?.title}</ModalHeader>
+              <ModalBody>
                 <p>
-                  <strong>Assigned To:</strong> {selectedIssue?.assignedTo.fullName} (
-                  {selectedIssue?.assignedTo.role})
+                  <strong>Hostel:</strong> {selectedIssue?.hostelNumber}
                 </p>
                 <p>
-                  <strong>Assigned By:</strong> {selectedIssue?.assignedBy.fullName}
+                  <strong>Description:</strong> {selectedIssue?.description}
                 </p>
                 <p>
-                  <strong>Date Assigned:</strong>{" "}
-                  {new Date(selectedIssue?.dateAssigned).toLocaleString()}
+                  <strong>Status:</strong> {selectedIssue?.status}
                 </p>
-                {selectedIssue?.isCompleted && (
-                  <p>
-                    <strong>Completed On:</strong>{" "}
-                    {new Date(selectedIssue?.dateCompleted).toLocaleString()}
-                  </p>
+                <p>
+                  <strong>Priority:</strong> {selectedIssue?.priority}
+                </p>
+                <p>
+                  <strong>Raised By:</strong> {selectedIssue?.raisedBy.fullName} (
+                  {selectedIssue?.raisedBy.userRole})
+                </p>
+                {selectedIssue?.assignedTo && (
+                  <>
+                    <p>
+                      <strong>Assigned To:</strong> {selectedIssue?.assignedTo.fullName} (
+                      {selectedIssue?.assignedTo.role})
+                    </p>
+                    <p>
+                      <strong>Assigned By:</strong> {selectedIssue?.assignedBy.fullName}
+                    </p>
+                    <p>
+                      <strong>Date Assigned:</strong>{" "}
+                      {new Date(selectedIssue?.dateAssigned).toLocaleString()}
+                    </p>
+                    {selectedIssue?.isCompleted && (
+                      <p>
+                        <strong>Completed On:</strong>{" "}
+                        {new Date(selectedIssue?.dateCompleted).toLocaleString()}
+                      </p>
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button onClick={closeModal}>Close</Button>
-          </ModalFooter>
-        </Modal>
-        {/* )} */}
+              </ModalBody>
+              <ModalFooter>
+                <Button onClick={closeModal}>Close</Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-5">
           {issues.length > 0 ? (
             issues.map((issue) => (
@@ -146,10 +148,10 @@ const IssuesCard = () => {
 
         {/* Pagination Controls */}
         <div className="flex gap-3 mt-5">
-          <Button disabled={page === 1} onClick={() => getIssues(page - 1)}>
+          <Button disabled={page === 1} onPress={() => setPage(page - 1)}>
             Previous
           </Button>
-          <Button disabled={page === totalPages} onClick={() => getIssues(page + 1)}>
+          <Button disabled={page === totalPages} onPress={() => setPage(page + 1)}>
             Next
           </Button>
         </div>
