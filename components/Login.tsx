@@ -2,9 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { Tabs, Tab, Input, Link, Button, Card, CardBody } from "@heroui/react";
 import { Eye, EyeOff } from "lucide-react";
+import { loginStudent, SignUpStudent } from '@/app/api/utils/student'
+import { loginAdmin } from '@/app/api/utils/admin'
+import Cookies from 'js-cookie'
+import { useRouter } from 'next/navigation';
+import Loader from "./loader/Loader";
 
 interface StudentFormData {
-  regNo: string;
+  registrationNumber: string;
   password: string;
   fullName: string;
   hostelNumber: string;
@@ -22,6 +27,8 @@ interface FormData {
 }
 
 export default function Login() {
+  const router = useRouter()
+  const [loading, setLoading] = useState<boolean>(false);
   const [selected, setSelected] = useState<"student" | "admin">("student");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [status, setStatus] = useState<"login" | "signup">("login");
@@ -29,11 +36,9 @@ export default function Login() {
 
   const [mounted, setMounted] = useState<boolean>(false);
 
-  
-
   const [formData, setFormData] = useState<FormData>({
     student: {
-      regNo: "",
+      registrationNumber: "",
       password: "",
       fullName: "",
       hostelNumber: "",
@@ -57,42 +62,75 @@ export default function Login() {
     setError("");
   };
 
-  const handleLogin = (
+  const handleLogin = async (
     e: React.FormEvent<HTMLFormElement>,
     role: "student" | "admin"
   ) => {
     e.preventDefault();
 
     if (role === "student") {
-      const { regNo, password } = formData.student;
-      if (!regNo || !password) {
+      const { registrationNumber, password } = formData.student;
+      if (!registrationNumber || !password) {
         setError("All fields are required.");
         return;
       }
+      const loginData = {
+        registrationNumber: registrationNumber,
+        password: password
+      }
+      const res = await loginStudent(loginData)
+      if (res) {
+        Cookies.set('accessToken', res?.data?.accessToken);
+        Cookies.set('role', role);
+        router.push('/dashboard');
+      }
       console.log("Student Login:", formData.student);
-    } else {
+    }
+    else {
       const { username, password } = formData.admin;
       if (!username || !password) {
         setError("All fields are required.");
         return;
       }
-      console.log("Admin Login:", formData.admin);
+
+      const loginData = {
+        username: username,
+        password: password
+      }
+
+      try {
+        setLoading(true)
+        const res = await loginAdmin(loginData)
+        if (res) {
+          Cookies.set('accessToken', res?.data?.accessToken);
+          Cookies.set('role', role);
+          localStorage.setItem("user", JSON.stringify(res?.data?.user));
+          router.push('/admin/dashboard');
+        }
+        setLoading(false)
+      } catch (error) {
+        setLoading(false)
+        console.log(error)
+      }
+
     }
 
     resetForm(role);
   };
 
-  const handleSignup = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const { fullName, regNo, password, hostelNumber, mobileNumber } =
+    const { fullName, registrationNumber, password, hostelNumber, mobileNumber } =
       formData.student;
 
-    if (!fullName || !regNo || !password || !hostelNumber || !mobileNumber) {
+    if (!fullName || !registrationNumber || !password || !hostelNumber || !mobileNumber) {
       setError("All fields are required.");
       return;
     }
 
-    console.log("Student Signup:", formData.student);
+    const response = await SignUpStudent(formData.student);
+
+    console.log("Student Signup:", response);
     resetForm("student");
     setStatus("login");
   };
@@ -103,12 +141,12 @@ export default function Login() {
       [role]:
         role === "student"
           ? {
-              regNo: "",
-              password: "",
-              fullName: "",
-              hostelNumber: "",
-              mobileNumber: "",
-            }
+            registrationNumber: "",
+            password: "",
+            fullName: "",
+            hostelNumber: "",
+            mobileNumber: "",
+          }
           : { username: "", password: "" },
     }));
     setError("");
@@ -122,6 +160,7 @@ export default function Login() {
 
   return (
     <div className="flex flex-col items-center w-full mt-10">
+        <Loader loading={loading} />
       <Card className="max-w-full w-[340px] shadow-lg">
         <CardBody className="overflow-hidden">
           <Tabs
@@ -140,10 +179,10 @@ export default function Login() {
                   <Input
                     isRequired
                     label="Reg. No"
-                    name="regNo"
+                    name="registrationNumber"
                     placeholder="Enter your Registration No."
                     type="text"
-                    value={formData.student.regNo}
+                    value={formData.student.registrationNumber}
                     onChange={(e) => handleChange(e, "student")}
                   />
                   <Input
@@ -192,10 +231,10 @@ export default function Login() {
                   <Input
                     isRequired
                     label="Reg. No"
-                    name="regNo"
+                    name="registrationNumber"
                     placeholder="Enter your Registration No."
                     type="text"
-                    value={formData.student.regNo}
+                    value={formData.student.registrationNumber}
                     onChange={(e) => handleChange(e, "student")}
                   />
                   <Input
