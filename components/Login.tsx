@@ -2,10 +2,10 @@
 import React, { useEffect, useState } from "react";
 import { Tabs, Tab, Input, Link, Button, Card, CardBody } from "@heroui/react";
 import { Eye, EyeOff } from "lucide-react";
-import { loginStudent, SignUpStudent } from '@/app/api/utils/student'
-import { loginAdmin } from '@/app/api/utils/admin'
-import Cookies from 'js-cookie'
-import { useRouter } from 'next/navigation';
+import { loginStudent, SignUpStudent } from "@/app/api/utils/student";
+import { loginAdmin } from "@/app/api/utils/admin";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 import Loader from "./loader/Loader";
 
 interface StudentFormData {
@@ -27,7 +27,7 @@ interface FormData {
 }
 
 export default function Login() {
-  const router = useRouter()
+  const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
   const [selected, setSelected] = useState<"student" | "admin">("student");
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -76,17 +76,16 @@ export default function Login() {
       }
       const loginData = {
         registrationNumber: registrationNumber,
-        password: password
-      }
-      const res = await loginStudent(loginData)
+        password: password,
+      };
+      const res = await loginStudent(loginData);
       if (res) {
-        Cookies.set('accessToken', res?.data?.accessToken);
-        Cookies.set('role', role);
-        router.push('/dashboard');
+        Cookies.set("accessToken", res?.data?.accessToken);
+        Cookies.set("role", role);
+        router.push("/dashboard");
       }
       console.log("Student Login:", formData.student);
-    }
-    else {
+    } else {
       const { username, password } = formData.admin;
       if (!username || !password) {
         setError("All fields are required.");
@@ -95,24 +94,23 @@ export default function Login() {
 
       const loginData = {
         username: username,
-        password: password
-      }
+        password: password,
+      };
 
       try {
-        setLoading(true)
-        const res = await loginAdmin(loginData)
+        setLoading(true);
+        const res = await loginAdmin(loginData);
         if (res) {
-          Cookies.set('accessToken', res?.data?.accessToken);
-          Cookies.set('role', role);
+          Cookies.set("accessToken", res?.data?.accessToken);
+          Cookies.set("role", role);
           localStorage.setItem("user", JSON.stringify(res?.data?.user));
-          router.push('/admin/dashboard');
+          router.push("/admin/dashboard");
         }
-        setLoading(false)
+        setLoading(false);
       } catch (error) {
-        setLoading(false)
-        console.log(error)
+        setLoading(false);
+        console.log(error);
       }
-
     }
 
     resetForm(role);
@@ -120,10 +118,21 @@ export default function Login() {
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const { fullName, registrationNumber, password, hostelNumber, mobileNumber } =
-      formData.student;
+    const {
+      fullName,
+      registrationNumber,
+      password,
+      hostelNumber,
+      mobileNumber,
+    } = formData.student;
 
-    if (!fullName || !registrationNumber || !password || !hostelNumber || !mobileNumber) {
+    if (
+      !fullName ||
+      !registrationNumber ||
+      !password ||
+      !hostelNumber ||
+      !mobileNumber
+    ) {
       setError("All fields are required.");
       return;
     }
@@ -141,12 +150,12 @@ export default function Login() {
       [role]:
         role === "student"
           ? {
-            registrationNumber: "",
-            password: "",
-            fullName: "",
-            hostelNumber: "",
-            mobileNumber: "",
-          }
+              registrationNumber: "",
+              password: "",
+              fullName: "",
+              hostelNumber: "",
+              mobileNumber: "",
+            }
           : { username: "", password: "" },
     }));
     setError("");
@@ -160,7 +169,7 @@ export default function Login() {
 
   return (
     <div className="flex flex-col items-center w-full mt-10">
-        <Loader loading={loading} />
+      <Loader loading={loading} />
       <Card className="max-w-full w-[340px] shadow-lg">
         <CardBody className="overflow-hidden">
           <Tabs
@@ -198,7 +207,11 @@ export default function Login() {
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {!showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                        {!showPassword ? (
+                          <Eye size={20} />
+                        ) : (
+                          <EyeOff size={20} />
+                        )}
                       </button>
                     }
                   />
@@ -250,7 +263,11 @@ export default function Login() {
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {!showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                        {!showPassword ? (
+                          <Eye size={20} />
+                        ) : (
+                          <EyeOff size={20} />
+                        )}
                       </button>
                     }
                   />
