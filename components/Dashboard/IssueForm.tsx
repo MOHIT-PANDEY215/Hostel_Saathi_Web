@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Form, Input, Button, Avatar, useDisclosure } from "@heroui/react";
 import { submitIssue } from "@/app/api/utils/issue";
 import ImageModal from "./ImageModal";
-import {  Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 interface IssueFormData {
   title: string;
@@ -22,12 +22,12 @@ const IssueForm: React.FC = () => {
   const [role, setRole] = useState<string | null>(null);
   const [mounted, setMounted] = useState<boolean>(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [image,setImage] = useState({
-    title:'',
-    src:''
+  const [image, setImage] = useState({
+    title: '',
+    src: ''
   })
   const router = useRouter();
-  const {isOpen, onOpen, onOpenChange} = useDisclosure();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   // Form State
   const [formValues, setFormValues] = useState<IssueFormData>({
     title: "",
@@ -59,15 +59,15 @@ const IssueForm: React.FC = () => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
       const uniqueFiles = newFiles.filter(
-        (newFile) => !files.some((existingFile) => 
+        (newFile) => !files.some((existingFile) =>
           existingFile.name === newFile.name && existingFile.size === newFile.size
         )
       );
-  
+
       if (uniqueFiles.length !== newFiles.length) {
         alert("This file was already uploaded!");
       }
-  
+
       setFiles((prev) => [...prev, ...uniqueFiles]);
     }
   };
@@ -82,31 +82,31 @@ const IssueForm: React.FC = () => {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-  
+
     if (!formValues.title || !formValues.description || !formValues.hostelNumber) {
       setErrors({ general: "Title, Description, and Hostel Number are required!" });
       return;
     }
-  
+
     setLoading(true);
     setErrors({});
-  
+
     try {
       const token = Cookies.get("accessToken");
       if (!token) {
         router.push("/login");
         return;
       }
-  
+
       const requestBody: IssueFormData = {
         ...formValues,
         tags: formValues.tags ? formValues.tags.split(",").map((tag) => tag.trim()).join(",") : "",
         status: "pending",
         isCompleted: false,
       };
-  
+
       const response = await submitIssue(requestBody, files);
-  
+
       if (response.status === 200) {
         setFormValues({ title: "", description: "", hostelNumber: "", tags: "" });
         setFiles([]);
@@ -168,35 +168,33 @@ const IssueForm: React.FC = () => {
         onChange={handleChange}
       />
 
-      
-
       <div className="flex flex-col gap-2 items-center justify-center w-full">
         <p className="self-start">Upload Images</p>
         <div className="self-start flex flex-wrap gap-2">
-  {files.map((file, index) => (
-    <div key={index} className="relative group">
-      <Avatar
-        showFallback
-        name={file.name.substring(0, 2).toUpperCase()}
-        className="bg-[#05686E] text-white border-white border-2 h-16 w-16 rounded-md"
-        src={URL.createObjectURL(file)}
-        onClick={() => handleImageClick(file.name, URL.createObjectURL(file))}
-      />
-      
-      <button 
-        onClick={() => handleDeleteFile(index)} 
-        className="absolute top-[-10px] right-[-10px] bg-white rounded-full  p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-      >
-        <Trash2 size={16} color="red" />
-      </button>
-    </div>
-  ))}
-</div>
+          {files.map((file, index) => (
+            <div key={index} className="relative group">
+              <Avatar
+                showFallback
+                name={file.name.substring(0, 2).toUpperCase()}
+                className="bg-[#05686E] text-white border-white border-2 h-16 w-16 rounded-md"
+                src={URL.createObjectURL(file)}
+                onClick={() => handleImageClick(file.name, URL.createObjectURL(file))}
+              />
 
-      {
-        image?.src &&
-      <ImageModal isOpen={isOpen} onOpenChange={onOpenChange} title={image?.title} src={image.src} />
-      }
+              <button
+                onClick={() => handleDeleteFile(index)}
+                className="absolute top-[-10px] right-[-10px] bg-white rounded-full  p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              >
+                <Trash2 size={16} color="red" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {
+          image?.src &&
+          <ImageModal isOpen={isOpen} onOpenChange={onOpenChange} title={image?.title} src={image.src} />
+        }
         <label
           htmlFor="file-upload"
           className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-[#27272a] hover:bg-[#45454b]"

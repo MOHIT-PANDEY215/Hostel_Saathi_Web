@@ -11,10 +11,13 @@ import {
   ModalBody,
   ModalFooter,
   ModalContent,
+  Avatar,
+  useDisclosure,
 } from "@heroui/react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { getAllIssues } from '@/app/api/utils/issue';
+import ImageModal from "./ImageModal";
 
 interface issueData {
   _id: string;
@@ -22,6 +25,7 @@ interface issueData {
   hostelNumber: string;
   description: string;
   status: string;
+  images: string[];
 }
 
 const IssuesCard = () => {
@@ -29,8 +33,10 @@ const IssuesCard = () => {
   const [issues, setIssues] = useState<issueData[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedIssue, setSelectedIssue] = useState(null);
+  const [selectedIssue, setSelectedIssue] = useState<issueData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalImageURI, setModalImageURI] = useState<string | null>(null);
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const getIssues = async () => {
     const token = Cookies.get("accessToken");
@@ -40,10 +46,6 @@ const IssuesCard = () => {
     }
 
     try {
-      // const response = await axios.get(
-      //   `https://hostel-saathi-backend.onrender.com/api/v1/issue/all?page=${page}`,
-      //   { headers: { Authorization: `Bearer ${token}` } }
-      // );
       const response = await getAllIssues(page);
       setIssues(response.ref);
       setTotalPages(response.totalPages);
@@ -56,7 +58,7 @@ const IssuesCard = () => {
     getIssues();
   }, [page]);
 
-  const openModal = (issue) => {
+  const openModal = (issue: issueData) => {
     setSelectedIssue(issue);
     setIsModalOpen(true);
   };
@@ -66,9 +68,22 @@ const IssuesCard = () => {
     setIsModalOpen(false);
   };
 
+  const handleImageClick = (imageURI: string) => {
+    setModalImageURI(imageURI);
+    onOpen();
+  }
+
   return (
     <>
       <div className="p-6 backdrop-brightness-50 rounded-2xl">
+        {modalImageURI &&
+          <ImageModal
+            isOpen={isOpen}
+            onOpenChange={onOpenChange}
+            title="Photo"
+            src={modalImageURI}
+          />
+        }
         {isModalOpen && selectedIssue && (
           <Modal
             isOpen={isModalOpen}
@@ -80,6 +95,16 @@ const IssuesCard = () => {
             <ModalContent>
               <ModalHeader>{selectedIssue?.title}</ModalHeader>
               <ModalBody>
+                {selectedIssue.images.map((imageURI: string) => (
+                  <div key={imageURI} className="relative group">
+                    <Avatar
+                      showFallback
+                      className="bg-[#05686E] text-white border-white border-2 h-16 w-16 rounded-md"
+                      src={imageURI}
+                      onClick={() => handleImageClick(imageURI)}
+                    />
+                  </div>
+                ))}
                 <p>
                   <strong>Hostel:</strong> {selectedIssue?.hostelNumber}
                 </p>
@@ -119,7 +144,7 @@ const IssuesCard = () => {
                 )}
               </ModalBody>
               <ModalFooter>
-                <Button onClick={closeModal}>Close</Button>
+                <Button onPress={closeModal}>Close</Button>
               </ModalFooter>
             </ModalContent>
           </Modal>
@@ -127,7 +152,7 @@ const IssuesCard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-5">
           {issues.length > 0 ? (
             issues.map((issue) => (
-              <Card key={issue._id} className="max-w-[400px] shadow-lg">
+              <Card key={issue._id} className="max-w-[400px] shadow-lg h-[300px]">
                 <CardHeader className="flex gap-3">
                   <div className="flex flex-col">
                     <p className="text-md font-bold">{issue.title}</p>
@@ -144,7 +169,7 @@ const IssuesCard = () => {
                 <Divider />
                 <CardFooter className="flex justify-between">
                   <p className="text-xs text-gray-500">Status: {issue.status}</p>
-                  <Button size="sm" variant="flat" onClick={() => openModal(issue)}>
+                  <Button size="sm" variant="flat" onPress={() => openModal(issue)}>
                     View Details
                   </Button>
                 </CardFooter>
