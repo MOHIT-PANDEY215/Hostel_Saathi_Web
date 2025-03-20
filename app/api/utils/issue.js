@@ -10,15 +10,15 @@ const axiosInstance = axios.create({
   baseURL: apiURL,
 });
 
-export const getAllIssues = async (page) => {
+export const getAllIssues = async (page,pageSize) => {
   try {
     const token = Cookies.get('accessToken');
     if (!token) {
       throw new Error('No access token found');
     }
 
-    const response = await axiosInstance.get(`/all?page=${page}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const response = await axiosInstance.get(`/all?pageNumber=${page}&pageSize=${pageSize}`, {
+      headers: { Authorization: `Bearer ${token}`},
     });
     return response.data.data;
   } catch (error) {

@@ -16,8 +16,10 @@ import {
 } from "@heroui/react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+
 import { getAllIssues } from '@/app/api/utils/issue';
 import ImageModal from "./ImageModal";
+
 
 interface issueData {
   _id: string;
@@ -35,8 +37,12 @@ const IssuesCard = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedIssue, setSelectedIssue] = useState<issueData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
   const [modalImageURI, setModalImageURI] = useState<string | null>(null);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  const [pageSize, setPageSize] = useState(4);
+
 
   const getIssues = async () => {
     const token = Cookies.get("accessToken");
@@ -46,7 +52,9 @@ const IssuesCard = () => {
     }
 
     try {
-      const response = await getAllIssues(page);
+
+      const response = await getAllIssues(page, pageSize);
+
       setIssues(response.ref);
       setTotalPages(response.totalPages);
     } catch (error) {
@@ -68,10 +76,16 @@ const IssuesCard = () => {
     setIsModalOpen(false);
   };
 
+
   const handleImageClick = (imageURI: string) => {
     setModalImageURI(imageURI);
     onOpen();
   }
+
+
+  const handlePageChange = (page:any) => {
+    setPage(page);
+  };
 
   return (
     <>
@@ -118,17 +132,19 @@ const IssuesCard = () => {
                   <strong>Priority:</strong> {selectedIssue?.priority}
                 </p>
                 <p>
-                  <strong>Raised By:</strong> {selectedIssue?.raisedBy.fullName} (
-                  {selectedIssue?.raisedBy.userRole})
+                  <strong>Raised By:</strong> {selectedIssue?.raisedBy.fullName}{" "}
+                  ({selectedIssue?.raisedBy.userRole})
                 </p>
                 {selectedIssue?.assignedTo && (
                   <>
                     <p>
-                      <strong>Assigned To:</strong> {selectedIssue?.assignedTo.fullName} (
+                      <strong>Assigned To:</strong>{" "}
+                      {selectedIssue?.assignedTo.fullName} (
                       {selectedIssue?.assignedTo.role})
                     </p>
                     <p>
-                      <strong>Assigned By:</strong> {selectedIssue?.assignedBy.fullName}
+                      <strong>Assigned By:</strong>{" "}
+                      {selectedIssue?.assignedBy.fullName}
                     </p>
                     <p>
                       <strong>Date Assigned:</strong>{" "}
@@ -137,7 +153,9 @@ const IssuesCard = () => {
                     {selectedIssue?.isCompleted && (
                       <p>
                         <strong>Completed On:</strong>{" "}
-                        {new Date(selectedIssue?.dateCompleted).toLocaleString()}
+                        {new Date(
+                          selectedIssue?.dateCompleted
+                        ).toLocaleString()}
                       </p>
                     )}
                   </>
@@ -152,7 +170,9 @@ const IssuesCard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-5">
           {issues.length > 0 ? (
             issues.map((issue) => (
+
               <Card key={issue._id} className="max-w-[400px] shadow-lg h-[300px]">
+
                 <CardHeader className="flex gap-3">
                   <div className="flex flex-col">
                     <p className="text-md font-bold">{issue.title}</p>
@@ -168,8 +188,16 @@ const IssuesCard = () => {
                 </CardBody>
                 <Divider />
                 <CardFooter className="flex justify-between">
-                  <p className="text-xs text-gray-500">Status: {issue.status}</p>
-                  <Button size="sm" variant="flat" onPress={() => openModal(issue)}>
+
+                  <p className="text-xs text-gray-500">
+                    Status: {issue.status}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    onClick={() => openModal(issue)}
+                  >
+
                     View Details
                   </Button>
                 </CardFooter>
@@ -181,11 +209,33 @@ const IssuesCard = () => {
         </div>
 
         {/* Pagination Controls */}
-        <div className="flex gap-3 mt-5">
+
+        <div className="flex gap-3 mt-8">
           <Button disabled={page === 1} onPress={() => setPage(page - 1)}>
             Previous
           </Button>
-          <Button disabled={page === totalPages} onPress={() => setPage(page + 1)}>
+          <div className="flex flex-col items-center">
+            {/* Pagination Section */}
+            <div className="flex space-x-2">
+              {[...Array(totalPages)].map((_, index) => (
+                <Button
+                  key={index + 1}
+                  onPress={() => handlePageChange(index + 1)}
+                  className={`px-4 py-2 rounded-lg border border-gray-300 ${
+                    page === index + 1
+                      ? "bg-gray-500 text-white"
+                      : "bg-white text-gray-700"
+                  } hover:bg-gray-400 hover:text-white transition`}
+                >
+                  {index + 1}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <Button
+            disabled={page === totalPages}
+            onPress={() => setPage(page + 1)}
+          >
             Next
           </Button>
         </div>
