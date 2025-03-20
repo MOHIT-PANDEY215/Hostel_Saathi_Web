@@ -6,6 +6,7 @@ import { loginStudent, SignUpStudent } from '@/app/api/utils/student'
 import { loginAdmin } from '@/app/api/utils/admin'
 import Cookies from 'js-cookie'
 import { useRouter } from 'next/navigation';
+import Loader from "./loader/Loader";
 
 interface StudentFormData {
   registrationNumber: string;
@@ -27,6 +28,7 @@ interface FormData {
 
 export default function Login() {
   const router = useRouter()
+  const [loading, setLoading] = useState<boolean>(false);
   const [selected, setSelected] = useState<"student" | "admin">("student");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [status, setStatus] = useState<"login" | "signup">("login");
@@ -96,14 +98,21 @@ export default function Login() {
         password: password
       }
 
-      const res = await loginAdmin(loginData)
-
-      if (res) {
-        Cookies.set('accessToken', res?.data?.accessToken);
-        Cookies.set('role', role);
-        router.push('/adminDashboard');
+      try {
+        setLoading(true)
+        const res = await loginAdmin(loginData)
+        if (res) {
+          Cookies.set('accessToken', res?.data?.accessToken);
+          Cookies.set('role', role);
+          localStorage.setItem("user", JSON.stringify(res?.data?.user));
+          router.push('/admin/dashboard');
+        }
+        setLoading(false)
+      } catch (error) {
+        setLoading(false)
+        console.log(error)
       }
-      console.log("Admin Login:", res);
+
     }
 
     resetForm(role);
@@ -151,6 +160,7 @@ export default function Login() {
 
   return (
     <div className="flex flex-col items-center w-full mt-10">
+        <Loader loading={loading} />
       <Card className="max-w-full w-[340px] shadow-lg">
         <CardBody className="overflow-hidden">
           <Tabs

@@ -18,9 +18,10 @@ export const loginAdmin = async (body) => {
             },
         });
         return response.data;
-    } catch (error) {
-        console.error('Error during login:', error);
-        throw error;
+    } catch (err) {
+        console.error('Error during login:', err);
+        alert(err.response?.data?.message || "Something went wrong!")
+        throw err;
     }
 };
 
@@ -36,9 +37,10 @@ export const getAdminList = async (pageNumber, pageSize) => {
             headers: { Authorization: `Bearer ${token}` }
         });
         return response.data;
-    } catch (error) {
-        console.error('Error during login:', error);
-        throw error;
+    } catch (err) {
+        console.error('Error during login:', err);
+        alert(err.response?.data?.message || "Something went wrong!")
+        throw err;
     }
 };
 
@@ -54,8 +56,23 @@ export const registerAdmin = async (body) => {
             }
         });
         return response.data;
-    } catch (error) {
-        console.error('Error during registration:', error);
-        throw error;
+    } catch (err) {
+        console.error('Error during registration:', err);
+        alert(err.response?.data?.message || "Something went wrong!")
+        throw err;
+    }
+};
+
+export const logoutAdmin = async () => {
+    try {
+        const token = Cookies.get("accessToken");
+        const response = await axiosInstance.post(`api/v1/admin/logout`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (err) {
+        console.error('Error during registration:', err);
+        alert(err.response?.data?.message || "Something went wrong!")
+        throw err;
     }
 };
