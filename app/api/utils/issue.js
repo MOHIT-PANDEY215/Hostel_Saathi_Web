@@ -1,28 +1,35 @@
-import axios from 'axios';
-import Cookies from 'js-cookie';
-import { apiUrlForRequest } from '@/lib/apiHelper';
+import axios from "axios";
+import Cookies from "js-cookie";
+import { apiUrlForRequest } from "@/lib/apiHelper";
 
-const PROD_ENDPOINT = 'https://hostel-saathi-backend.onrender.com';
-const LOCAL_ENDPOINT = 'http://localhost:4000';
-const apiURL = `${apiUrlForRequest(false, LOCAL_ENDPOINT, PROD_ENDPOINT)}/api/v1/issue`;
+const PROD_ENDPOINT = "https://hostel-saathi-backend.onrender.com";
+const LOCAL_ENDPOINT = "http://localhost:4000";
+const apiURL = `${apiUrlForRequest(
+  false,
+  LOCAL_ENDPOINT,
+  PROD_ENDPOINT
+)}/api/v1/issue`;
 
 const axiosInstance = axios.create({
   baseURL: apiURL,
 });
 
-export const getAllIssues = async (page,pageSize) => {
+export const getAllIssues = async (page, pageSize, isCompleted,isAssigned,hostelNumber) => {
   try {
-    const token = Cookies.get('accessToken');
+    const token = Cookies.get("accessToken");
     if (!token) {
-      throw new Error('No access token found');
+      throw new Error("No access token found");
     }
 
-    const response = await axiosInstance.get(`/all?pageNumber=${page}&pageSize=${pageSize}`, {
-      headers: { Authorization: `Bearer ${token}`},
-    });
+    const response = await axiosInstance.get(
+      `/all?pageNumber=${page}&pageSize=${pageSize}&isCompleted=${isCompleted}&isAssigned=${isAssigned}&hostelNumber=${hostelNumber}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     return response.data.data;
   } catch (error) {
-    console.error('Error fetching issues:', error);
+    console.error("Error fetching issues:", error);
     throw error;
   }
 };
@@ -38,7 +45,15 @@ export const submitIssue = async (issueData, files) => {
     formData.append("title", issueData.title);
     formData.append("description", issueData.description);
     formData.append("hostelNumber", issueData.hostelNumber);
-    formData.append("tags", issueData.tags ? issueData.tags.split(",").map((tag) => tag.trim()).join(",") : "");
+    formData.append(
+      "tags",
+      issueData.tags
+        ? issueData.tags
+            .split(",")
+            .map((tag) => tag.trim())
+            .join(",")
+        : ""
+    );
     formData.append("status", "pending");
     formData.append("isCompleted", "false");
 
