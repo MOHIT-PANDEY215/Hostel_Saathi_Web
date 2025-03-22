@@ -17,9 +17,8 @@ import {
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
-import { getAllIssues } from '@/app/api/utils/issue';
+import { getAllIssues } from "@/app/api/utils/issue";
 import ImageModal from "./ImageModal";
-
 
 interface issueData {
   _id: string;
@@ -30,7 +29,7 @@ interface issueData {
   images: string[];
 }
 
-const IssuesCard = () => {
+const IssuesCard = (selectedFilters: any) => {
   const router = useRouter();
   const [issues, setIssues] = useState<issueData[]>([]);
   const [page, setPage] = useState(1);
@@ -43,7 +42,10 @@ const IssuesCard = () => {
 
   const [pageSize, setPageSize] = useState(4);
 
-
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [isAssigned, setIsAssigned] = useState(false);
+  const [hostelNumber, setHostelNumber] = useState(14);
+  
   const getIssues = async () => {
     const token = Cookies.get("accessToken");
     if (!token) {
@@ -52,8 +54,13 @@ const IssuesCard = () => {
     }
 
     try {
-
-      const response = await getAllIssues(page, pageSize);
+      const response = await getAllIssues(
+        page,
+        pageSize,
+        isCompleted,
+        isAssigned,
+        hostelNumber
+      );
 
       setIssues(response.ref);
       setTotalPages(response.totalPages);
@@ -61,6 +68,44 @@ const IssuesCard = () => {
       console.error("Error fetching issues:", error);
     }
   };
+  useEffect(() => {
+    if (selectedFilters?.selectedFilters?.includes("isCompleted")) {
+      setIsCompleted(true);
+    } else {
+      setIsCompleted(false);
+    }
+  }, [selectedFilters]);
+  useEffect(() => {
+    if (selectedFilters?.selectedFilters?.includes("isAssigned")) {
+      setIsAssigned(true);
+    } else {
+      setIsAssigned(false);
+    }
+  }, [selectedFilters]);
+
+  console.log(issues);
+  
+  useEffect(() => {
+    if (selectedFilters?.selectedFilters.length>0) {
+      const hostelNumber = selectedFilters?.selectedFilters
+        .find((item: any) => item.startsWith("hostel-"))
+        ?.split("-")[1];
+
+      setHostelNumber(hostelNumber);
+    }
+  });
+
+  useEffect(() => {
+    getIssues();
+  }, [isCompleted]);
+
+  useEffect(() => {
+    getIssues();
+  }, [isAssigned]);
+
+  useEffect(() => {
+    getIssues();
+  }, [hostelNumber]);
 
   useEffect(() => {
     getIssues();
@@ -76,28 +121,26 @@ const IssuesCard = () => {
     setIsModalOpen(false);
   };
 
-
   const handleImageClick = (imageURI: string) => {
     setModalImageURI(imageURI);
     onOpen();
-  }
+  };
 
-
-  const handlePageChange = (page:any) => {
+  const handlePageChange = (page: any) => {
     setPage(page);
   };
 
   return (
     <>
       <div className="p-6 backdrop-brightness-50 rounded-2xl">
-        {modalImageURI &&
+        {modalImageURI && (
           <ImageModal
             isOpen={isOpen}
             onOpenChange={onOpenChange}
             title="Photo"
             src={modalImageURI}
           />
-        }
+        )}
         {isModalOpen && selectedIssue && (
           <Modal
             isOpen={isModalOpen}
@@ -170,9 +213,10 @@ const IssuesCard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-5">
           {issues.length > 0 ? (
             issues.map((issue) => (
-
-              <Card key={issue._id} className="max-w-[400px] shadow-lg h-[300px]">
-
+              <Card
+                key={issue._id}
+                className="max-w-[400px] shadow-lg h-[300px]"
+              >
                 <CardHeader className="flex gap-3">
                   <div className="flex flex-col">
                     <p className="text-md font-bold">{issue.title}</p>
@@ -184,11 +228,12 @@ const IssuesCard = () => {
                 <Divider />
                 <CardBody>
                   <p className="text-gray-200">Description:</p>
-                  <p className="text-gray-300">{issue.description}</p>
+                  <p className="text-gray-300 line-clamp-4">
+                    {issue.description}
+                  </p>
                 </CardBody>
                 <Divider />
                 <CardFooter className="flex justify-between">
-
                   <p className="text-xs text-gray-500">
                     Status: {issue.status}
                   </p>
@@ -197,7 +242,6 @@ const IssuesCard = () => {
                     variant="flat"
                     onClick={() => openModal(issue)}
                   >
-
                     View Details
                   </Button>
                 </CardFooter>
