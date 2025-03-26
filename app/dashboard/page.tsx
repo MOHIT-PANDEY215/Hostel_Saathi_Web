@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dropdown,
   DropdownTrigger,
@@ -8,24 +8,73 @@ import {
   DropdownItem,
 } from "@heroui/react";
 import IssueForm from "@/components/Dashboard/IssueForm";
-import IssuesCard from "@/components/Dashboard/IssuesCard";
+import IssuesCard, { IssueData } from "@/components/Dashboard/IssuesCard";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import { Button } from "@mui/material";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import { getAllIssues } from "../api/utils/issue";
 
 const Page = () => {
-  const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
-  const [selectedFilters, setSelectedFilters] = useState([]);
-  const selectedValue = React.useMemo(
-    () => Array.from(selectedKeys),
-    [selectedKeys]
-  );
+  const router = useRouter();
+  
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [hostelNumber, setHostelNumber] = useState<number | null>(null);
+  const [pageSize, setPageSize] = useState<number>(4);
+  const [isCompleted, setIsCompleted] = useState<boolean>(false);
+  const [isAssigned, setIsAssigned] = useState<boolean>(false);
+  const [issues, setIssues] = useState<IssueData[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [filters, setFilters] = useState<boolean>(false);
 
-  const [filters, setFilters] = useState(false);
+  const selectedValue = React.useMemo(() => Array.from(selectedKeys), [selectedKeys]);
+
   const handleApplyFilters = () => {
     setFilters(false);
     setSelectedFilters(selectedValue);
   };
-  const [hostelNo, setHostelNo] = useState(14);
+  const getIssues = async () => {
+    const token = Cookies.get("accessToken");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const response = await getAllIssues(
+        page,
+        pageSize,
+        isCompleted,
+        isAssigned,
+        hostelNumber || undefined
+      );
+
+      setIssues(response.ref);
+      setTotalPages(response.totalPages);
+    } catch (error) {
+      console.error("Error fetching issues:", error);
+    }
+  };
+  console.log(selectedFilters);
+  useEffect(() => {
+    setIsCompleted(selectedFilters?.includes("isCompleted"));
+    setIsAssigned(selectedFilters?.includes("isAssigned"));
+  }, [selectedFilters]);
+
+  useEffect(() => {
+    if (selectedFilters?.length > 0) {
+      const hostelNumber = selectedFilters
+        ?.find((item: any) => item.startsWith("hostel-"))
+        ?.split("-")[1];
+      if (hostelNumber) setHostelNumber(Number(hostelNumber));
+    }
+  }, []);
+
+  useEffect(() => {
+    getIssues();
+  }, [isCompleted, isAssigned, hostelNumber, page, selectedFilters]);
 
   return (
     <div className="p-6">
@@ -58,17 +107,20 @@ const Page = () => {
               <DropdownItem key="isAssigned">Assigned</DropdownItem>
               <DropdownItem
                 isReadOnly
-                key={hostelNo}
+                key={`${hostelNumber}`}
                 className="cursor-default"
                 endContent={
                   <select
                     className="z-10 outline-none w-16 py-0.5 rounded-md text-tiny group-data-[hover=true]:border-default-500 border-small border-default-300 dark:border-default-200 bg-transparent text-default-500"
                     id="hostelNumber"
                     name="hostelNumber"
-                    value={hostelNo}
+                    value={hostelNumber ?? ""}
                     onChange={(e) => {
-                      const hostelValue = parseInt(e.target.value, 10);
-                      setHostelNo(hostelValue);
+                      const hostelValue =
+                        e.target.value === "All"
+                          ? null
+                          : parseInt(e.target.value, 10);
+                      setHostelNumber(hostelValue);
 
                       setSelectedKeys((prevKeys) => {
                         const newKeys = new Set(prevKeys);
@@ -80,7 +132,8 @@ const Page = () => {
                         }
 
                         // Add new hostel selection
-                        newKeys.add(`hostel-${hostelValue}`);
+                        if (hostelValue !== null)
+                          newKeys.add(`hostel-${hostelValue}`);
 
                         return newKeys;
                       });
@@ -88,6 +141,7 @@ const Page = () => {
                       setFilters(true);
                     }}
                   >
+                    <option>All</option>
                     <option>20</option>
                     <option>14</option>
                     <option>18</option>
@@ -115,7 +169,13 @@ const Page = () => {
       </div>
 
       <div className="flex flex-col-reverse md:grid md:grid-cols-[2fr_1fr] pt-6 gap-10">
-        <IssuesCard selectedFilters={selectedFilters} />
+        <IssuesCard
+          selectedFilters={selectedFilters}
+          issues={issues}
+          totalPages={totalPages}
+          page={page}
+          setPage={setPage}
+        />
         <IssueForm />
       </div>
     </div>

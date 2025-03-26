@@ -20,9 +20,15 @@ export const getAllIssues = async (page, pageSize, isCompleted,isAssigned,hostel
     if (!token) {
       throw new Error("No access token found");
     }
+    const params = new URLSearchParams();
+       if(pageSize) params.append('pageSize', pageSize);
+       if(page) params.append('pageNumber', page);
+       if(isCompleted) params.append('isCompleted', isCompleted);
+       if(isAssigned) params.append('isAssigned', isAssigned);
+       if(hostelNumber) params.append('hostelNumber', hostelNumber);
 
     const response = await axiosInstance.get(
-      `/all?pageNumber=${page}&pageSize=${pageSize}&isCompleted=${isCompleted}&isAssigned=${isAssigned}&hostelNumber=${hostelNumber}`,
+      `/all?${params.toString()}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }

@@ -86,7 +86,7 @@ export default function AdminDropdown({ onClose }: AdminDropdownProps) {
                 </div>
             </button>
 
-            <button
+            {/* <button
                 onClick={() => handleLogout()}
                 className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-gray-100 hover:text-black"
             >
@@ -95,7 +95,7 @@ export default function AdminDropdown({ onClose }: AdminDropdownProps) {
                     Logout
                 </div>
 
-            </button>
+            </button> */}
         </div>
     );
 }

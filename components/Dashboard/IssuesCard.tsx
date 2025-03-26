@@ -20,98 +20,45 @@ import { useRouter } from "next/navigation";
 import { getAllIssues } from "@/app/api/utils/issue";
 import ImageModal from "./ImageModal";
 
-interface issueData {
+export interface IssueData {
   _id: string;
   title: string;
   hostelNumber: string;
   description: string;
   status: string;
   images: string[];
+  priority?: string;
+  raisedBy?: { fullName: string; userRole: string };
+  assignedTo?: { fullName: string; role: string };
+  assignedBy?: { fullName: string };
+  dateAssigned?: string;
+  dateCompleted?: string;
+  isCompleted?: boolean;
 }
 
-const IssuesCard = (selectedFilters: any) => {
+interface IssuesCardProps {
+  selectedFilters: string[];
+  issues: IssueData[];
+  totalPages: number;
+  page: number;
+  setPage: (page: number) => void;
+}
+
+const IssuesCard: React.FC<IssuesCardProps> = ({
+  selectedFilters,
+  issues,
+  totalPages,
+  page,
+  setPage,
+}) => {
   const router = useRouter();
-  const [issues, setIssues] = useState<issueData[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [selectedIssue, setSelectedIssue] = useState<issueData | null>(null);
+  const [selectedIssue, setSelectedIssue] = useState<IssueData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [modalImageURI, setModalImageURI] = useState<string | null>(null);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const [pageSize, setPageSize] = useState(4);
-
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [isAssigned, setIsAssigned] = useState(false);
-  const [hostelNumber, setHostelNumber] = useState(14);
-  
-  const getIssues = async () => {
-    const token = Cookies.get("accessToken");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    try {
-      const response = await getAllIssues(
-        page,
-        pageSize,
-        isCompleted,
-        isAssigned,
-        hostelNumber
-      );
-
-      setIssues(response.ref);
-      setTotalPages(response.totalPages);
-    } catch (error) {
-      console.error("Error fetching issues:", error);
-    }
-  };
-  useEffect(() => {
-    if (selectedFilters?.selectedFilters?.includes("isCompleted")) {
-      setIsCompleted(true);
-    } else {
-      setIsCompleted(false);
-    }
-  }, [selectedFilters]);
-  useEffect(() => {
-    if (selectedFilters?.selectedFilters?.includes("isAssigned")) {
-      setIsAssigned(true);
-    } else {
-      setIsAssigned(false);
-    }
-  }, [selectedFilters]);
-
-  console.log(issues);
-  
-  useEffect(() => {
-    if (selectedFilters?.selectedFilters.length>0) {
-      const hostelNumber = selectedFilters?.selectedFilters
-        .find((item: any) => item.startsWith("hostel-"))
-        ?.split("-")[1];
-
-      setHostelNumber(hostelNumber);
-    }
-  });
-
-  useEffect(() => {
-    getIssues();
-  }, [isCompleted]);
-
-  useEffect(() => {
-    getIssues();
-  }, [isAssigned]);
-
-  useEffect(() => {
-    getIssues();
-  }, [hostelNumber]);
-
-  useEffect(() => {
-    getIssues();
-  }, [page]);
-
-  const openModal = (issue: issueData) => {
+  const openModal = (issue: IssueData) => {
     setSelectedIssue(issue);
     setIsModalOpen(true);
   };
@@ -153,7 +100,7 @@ const IssuesCard = (selectedFilters: any) => {
               <ModalHeader>{selectedIssue?.title}</ModalHeader>
               <ModalBody>
                 {selectedIssue.images.map((imageURI: string) => (
-                  <div key={imageURI} className="relative group">
+                  <div key={imageURI} className="relative group cursor-pointer">
                     <Avatar
                       showFallback
                       className="bg-[#05686E] text-white border-white border-2 h-16 w-16 rounded-md"
@@ -171,33 +118,40 @@ const IssuesCard = (selectedFilters: any) => {
                 <p>
                   <strong>Status:</strong> {selectedIssue?.status}
                 </p>
-                <p>
-                  <strong>Priority:</strong> {selectedIssue?.priority}
-                </p>
-                <p>
-                  <strong>Raised By:</strong> {selectedIssue?.raisedBy.fullName}{" "}
-                  ({selectedIssue?.raisedBy.userRole})
-                </p>
-                {selectedIssue?.assignedTo && (
+                {selectedIssue.priority && (
+                  <p>
+                    <strong>Priority:</strong> {selectedIssue.priority}
+                  </p>
+                )}
+                {selectedIssue.raisedBy && (
+                  <p>
+                    <strong>Raised By:</strong>{" "}
+                    {selectedIssue.raisedBy.fullName} (
+                    {selectedIssue.raisedBy.userRole})
+                  </p>
+                )}
+                {selectedIssue.assignedTo && (
                   <>
                     <p>
                       <strong>Assigned To:</strong>{" "}
-                      {selectedIssue?.assignedTo.fullName} (
-                      {selectedIssue?.assignedTo.role})
+                      {selectedIssue.assignedTo.fullName} (
+                      {selectedIssue.assignedTo.role})
                     </p>
                     <p>
                       <strong>Assigned By:</strong>{" "}
-                      {selectedIssue?.assignedBy.fullName}
+                      {selectedIssue.assignedBy?.fullName}
                     </p>
                     <p>
                       <strong>Date Assigned:</strong>{" "}
-                      {new Date(selectedIssue?.dateAssigned).toLocaleString()}
+                      {new Date(
+                        selectedIssue.dateAssigned || ""
+                      ).toLocaleString()}
                     </p>
-                    {selectedIssue?.isCompleted && (
+                    {selectedIssue.isCompleted && (
                       <p>
                         <strong>Completed On:</strong>{" "}
                         {new Date(
-                          selectedIssue?.dateCompleted
+                          selectedIssue.dateCompleted || ""
                         ).toLocaleString()}
                       </p>
                     )}
@@ -211,8 +165,8 @@ const IssuesCard = (selectedFilters: any) => {
           </Modal>
         )}
         <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-5">
-          {issues.length > 0 ? (
-            issues.map((issue) => (
+          {issues?.length > 0 ? (
+            issues?.map((issue) => (
               <Card
                 key={issue._id}
                 className="max-w-[400px] shadow-lg h-[300px]"

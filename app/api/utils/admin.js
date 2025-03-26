@@ -66,7 +66,7 @@ export const registerAdmin = async (body) => {
 export const logoutAdmin = async () => {
     try {
         const token = Cookies.get("accessToken");
-        const response = await axiosInstance.post(`api/v1/admin/logout`, {
+        const response = await axiosInstance.post(`api/v1/admin/logout`,{}, {
             headers: { Authorization: `Bearer ${token}` }
         });
         return response.data;
